@@ -1,0 +1,8 @@
+Allora, giusto per fare un po' di ordine.
+La sequenza per ora è:
+
+1) Genera i cutotus con GenerateJWSTCutouts.py, che è uno script che prende le mappe JWST da maps/NIRcam etc etc, un DataFrame con le posizioni delle sorgenti, e genera i cutouts in Galaxies/{i_gal}. C'è anche un MoveCOSMOSCutouts.py che sposta i cutouts (non JWST) scaricati dal sito di COSMOS sempre dentro Galaxies/{i_gal}. Per "quali" galassie far girare, secondo me invece della UVJ selection di Williams+09 possiamo fare meglio prendendo i run fatti dentro CWeb sulla fotometria integrata e selezionare le massive/quiescenti/stocazzo in quel modo, poi vediamo come si rapporta con l'UVJ. Intanto come primo test prenderei un bel galassione grande e cicciotto.
+
+2) Una volta generati i cutotus, c'è da generare un tabellone con tutta la fotometria pixel per pixel. I cutouts JWST sono tutti sulla stessa scala e con gli stessi nx/ny, quindi in quel caso si può fare il numero dello stack. Gli altri no, ma mi chiedo se sia necessario andare sotto. Forse si, non è che son tutti dark sotto f090w, però è uno sbatti pazzesco nel caso. Considerato che sono un fottione di pixel, forse è meglio mascherare molto tight attorno alle galassie, direi che è meglio prendere gli output di SE++ o quel che cazzo è per i mask radius.
+
+3) Una volta generata la fotometria, c'è da girare Bagpipes. Del "come" giri ce ne preoccupiamo poi, intanto per girare gira.
