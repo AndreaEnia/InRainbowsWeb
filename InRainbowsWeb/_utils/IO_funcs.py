@@ -42,7 +42,7 @@ class FitsUtils:
     
     def degrade_to_worst(self, kernel_basepath, resize_kernel = True):
         from astropy.convolution import convolve
-        ## Do not convolve if already f444w
+        ## Do not convolve if already f444w, if blabla
         #if self.filtername == 'f444w':
         #    self.signal_convolved = self.signal.copy()
         #    return
