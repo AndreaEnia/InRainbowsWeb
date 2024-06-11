@@ -8,10 +8,11 @@ CosmosPath = home+'/Dropbox/Work_Stuff/GalaxyFormation/JWSTCosmosWeb/'
 
 """ InRainbowsWeb configuration variables. """
 
-paths_dict = {'current': CosmosPath+'scripts/',
-              'kernels':  CosmosPath+'kernels/',
-              'maps':  CosmosPath+'maps/',
-              'catalogs':  CosmosPath+'catalogs/'}
+paths_dict = {'current': home+'/scaloni/sed_fitting/scripts/',
+              #'kernels':  CosmosPath+'kernels/',
+              'kernels': home+'/scaloni/sed_fitting/kernels/',
+              'maps':  home+'/scaloni/sed_fitting/maps/',
+              'catalogs':  home+'/scaloni/sed_fitting/catalogs/'}
 
 maps_paths_dict = {'f814w': 'ACS/mosaic_cosmos_primer_60mas_hst_acs_wfc_f814w',
                    'f090w': 'NIRcam/mosaic_nircam_f090w_PRIMER-COSMOS_epoch2_60mas_v0_3',

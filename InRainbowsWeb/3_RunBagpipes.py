@@ -6,10 +6,9 @@ import numpy as np
 import pandas as pd
 from _utils import IO_funcs as IO
 
-galaxy_name = '956337'
-
+galaxy_name = 'test_new'
 # Read photometry .csv
-df = pd.read_csv('Galaxies/{}/photometries.csv'.format(galaxy_name))
+df = pd.read_csv('Galaxies/{}/photometries_bagpipes.csv'.format(galaxy_name))
 
 # Run bagpipes
 def load_phot(ID):
@@ -20,22 +19,23 @@ def load_phot(ID):
 
 filter_list = np.loadtxt('Filters/JWST_filters.txt', dtype='str')
 
-exponential = {}                          # Tau model e^-(t/tau)
-exponential["age"] = (0.001, 14.)         # Time since SF began: Gyr
-exponential["tau"] = (0.01, 10.)          # Timescale of decrease: Gyr
-exponential["metallicity"] = (0.005, 2.5) # 
-exponential["massformed"] = (1., 12.5)    # log_10(M*/M_solar)
+delayed = {}                          # Tau model te^-(t/tau)
+delayed["age"] = (0.001, 14.)         # Time since SF began: Gyr
+delayed["tau"] = (0.01, 10.)          # Timescale of decrease: Gyr
+delayed["metallicity"] = (0.005, 2.5) # 
+delayed["massformed"] = (1., 12.5)    # log_10(M*/M_solar)
 
 nebular = {}
 nebular["logU"] = (-4, -2)            # Log_10 of the ionization parameter.
 
 dust = {}                         
 dust["type"] = "Calzetti"         
-dust["Av"] = (0., 6.)
+dust["Av"] = (0., 6.)                  # Prova no-dust (=0), sennò: (0., 6.)
 
-fit_info = {}                         # The fit instructions dictionary
-fit_info["redshift"] = (0., 15.)       # Unknown photo-z
-fit_info["exponential"] = exponential
+fit_info = {}                           # The fit instructions dictionary
+fit_info["redshift"] = 0.345           # Spec-z
+#fit_info["redshift"] = (0., 15.)       # Unknown photo-z
+fit_info["delayed"] = delayed
 fit_info["dust"] = dust
 fit_info["nebular"] = nebular
 
@@ -57,7 +57,7 @@ def fit_catalog_parallel(args):
 
 # Fit the cells in ||.
 args_list = [(cell_ID, fit_info, filter_list) for cell_ID in df.ID.values]
-n_jobs = 14
+n_jobs = 12
 Parallel(n_jobs=n_jobs)(delayed(fit_catalog_parallel)(args) for args in args_list)
 
 #######################################
@@ -125,7 +125,7 @@ rc('text', usetex=True)
 from matplotlib import cm, gridspec
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 import matplotlib.axes as maxes
-fits_base = IO.FitsUtils('Galaxies/{0}/f444w_sci.fits'.format(galaxy_name), 'f444w', 'sci')
+fits_base = IO.FitsUtils('Galaxies/{0}/f444w_SNR_POOLED.fits'.format(galaxy_name), 'f444w', 'sci')
 
 def plot_quantity(fits_base, quantity, label, savepath, xmin, xmax, ymin, ymax, \
                   chisq_mask = False, chisq_map = None, chisq_threshold = 30, \
@@ -160,7 +160,7 @@ def save_fits(fits_base, quantity, label, code, savepath):
     newhdr = fits_base.hdr
     newhdr['BUNIT'] = label
     newhdr['CODE'] = code
-    newhdr['WHO'] = 'A. Enia'
+    newhdr['WHO'] = 'A. Enia, L. Scaloni'
     newhdr['WHEN'] = datetime.now().strftime("%d%b%Y %H:%M:%S")
     hdu = fits.PrimaryHDU(data = quantity, header = newhdr)
     hdu.writeto(savepath, overwrite=True)
@@ -168,8 +168,8 @@ def save_fits(fits_base, quantity, label, code, savepath):
 
 # Questo (plot + fits) DEVE diventare un unico loop
 nx, ny = fits_base.hdr['NAXIS1'], fits_base.hdr['NAXIS2']
-xmin, xmax = 53, 114 # CHISTU HAV'I A CANCIARI QUANNU
-ymin, ymax = 53, 114 # HAVI A FARI 'U CATALOGO FINALE
+xmin, xmax = 0+15, nx-15 # CHISTU HAV'I A CANCIARI QUANNU
+ymin, ymax = 0+15, ny-15 # HAVI A FARI 'U CATALOGO FINALE
 chisq_threshold = 100
 
 chisqmap = np.zeros((nx, ny))
@@ -180,14 +180,14 @@ plot_quantity(fits_base, chisqmap, r'$\chi^2$', 'pipes/{}_chisq.pdf'.format(gala
 f444w = np.zeros((nx, ny))
 f444w[f444w == 0] = np.nan
 f444w[results_df.PIX_Y.values, results_df.PIX_X.values] = results_df.f444w.values
-plot_quantity(fits_base, f444w, r'$Flux [$\mu$Jy]$', 'pipes/{}_f444w_chisq.pdf'.format(galaxy_name), xmin, xmax, ymin, ymax, \
+plot_quantity(fits_base, f444w, r'Flux [$\mu$Jy]', 'pipes/{}_f444w_chisq.pdf'.format(galaxy_name), xmin, xmax, ymin, ymax, \
               chisq_mask = True, chisq_map = chisqmap, chisq_threshold = chisq_threshold)
 
-zmap = np.zeros((nx, ny))
-zmap[zmap == 0] = np.nan
-zmap[results_df.PIX_Y.values, results_df.PIX_X.values] = results_df.redshift_50.values
-plot_quantity(fits_base, zmap, r'$z_{\rm phot}$', 'pipes/{}_photoz.pdf'.format(galaxy_name), xmin, xmax, ymin, ymax, \
-              chisq_mask = True, chisq_map = chisqmap, chisq_threshold = chisq_threshold)
+#zmap = np.zeros((nx, ny))
+#zmap[zmap == 0] = np.nan
+#zmap[results_df.PIX_Y.values, results_df.PIX_X.values] = results_df.redshift_50.values
+#plot_quantity(fits_base, zmap, r'$z_{\rm phot}$', 'pipes/{}_photoz.pdf'.format(galaxy_name), xmin, xmax, ymin, ymax, \
+#chisq_mask = True, chisq_map = chisqmap, chisq_threshold = chisq_threshold)
 
 massmap = np.zeros((nx, ny))
 massmap[massmap == 0] = np.nan
@@ -203,12 +203,12 @@ plot_quantity(fits_base, sfrmap, r'$\log {\rm SFR} [M_{\odot}/yr]$', 'pipes/{}_s
 
 avmap = np.zeros((nx, ny))
 avmap[avmap == 0] = np.nan
-avmap[results_df.PIX_Y.values, results_df.PIX_X.values] = np.log10(results_df['dust:Av_50'].values)
-plot_quantity(fits_base, avmap, r'$A_V$ [mag]', 'pipes/{}_Av.pdf', xmin, xmax, ymin, ymax, \
+avmap[results_df.PIX_Y.values, results_df.PIX_X.values] = results_df['dust:Av_50'].values
+plot_quantity(fits_base, avmap, r'$A_V$ [mag]', 'pipes/{}_Av.pdf'.format(galaxy_name), xmin, xmax, ymin, ymax, \
               chisq_mask = True, chisq_map = chisqmap, chisq_threshold = chisq_threshold)
 
 save_fits(fits_base, chisqmap, 'chi2', 'BAGPIPES', 'pipes/{}_chi2.fits'.format(galaxy_name))
-save_fits(fits_base, zmap, 'photo-z', 'BAGPIPES', 'pipes/{}_photoz.fits'.format(galaxy_name))
+#save_fits(fits_base, zmap, 'photo-z', 'BAGPIPES', 'pipes/{}_photoz.fits'.format(galaxy_name))
 save_fits(fits_base, massmap, 'logMstar', 'BAGPIPES', 'pipes/{}_mass.fits'.format(galaxy_name))
 save_fits(fits_base, sfrmap, 'logSFR', 'BAGPIPES', 'pipes/{}_sfr.fits'.format(galaxy_name))
 save_fits(fits_base, avmap, 'Av', 'BAGPIPES', 'pipes/{}_Av.fits'.format(galaxy_name))
